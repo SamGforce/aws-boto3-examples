@@ -1,0 +1,63 @@
+AWS State Changer Script
+
+Main function:
+The main function of this python program is to start stop Amazon Web Services (AWS) instances based on a Key/Value pair provided by the user.
+
+Details operation:
+
+This program includes a main python script (ec2_state_changer.py) and a library-like file (cred_parser.py) that includes a reusable class named “loginInfo”. This class is imported in the main script. 
+
+Main Script Functionality:
+
+The purpose of the script is to turns on/off instances in AWS  based on user provided tag info. User input is gathered as command line arguments. We are using the public boto3 python library from AWS that can be installed with python pip. Related documentation for boto3 can be found here link. The script first needs to retrieve credentials that is used to authenticate with boto3. We are expecting that this information is to be saved in a file and passed to the program at run time. In absence of a supplied parameter, this will default to login.info by the script.
+
+Arguments collected from user:
+
+usage: myprogram [-h] --tagKey TAGKEY --tagVal TAGVAL --action ACTION
+                 [--credentialFile CREDENTIALFILE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --tagKey TAGKEY       Specify the instance tag
+  --tagVal TAGVAL       Specify the instance tag
+  --action ACTION       Specify action to be take. Acceptable options:
+                        Stop/Start
+  --credentialFile CREDENTIALFILE
+                        Specify the filne name containing credentials.Default
+                        is login.info
+
+Sample run:
+
+python ec2_state_changer.py --tagKey Schedule --tagVal Two --action Stop
+
+
+LoginInfo Class
+
+The custom loginInfo class is used to retrieved credentials from a file that’s passed to our program with command line parameters. Although this class requires the file name parameter, if not provided by the user, the file name defaults to login.info in the main script, making this argument optional at run time. LoginInfo class reads the file and saves lines into a line, then looks for access_id and secret_key data fields. If found, it then parses appropriate login id and secret and passed it back to the main script using two getter methods. The values should be inserted after ‘=’ and it should not have any spaces. 
+
+Example of how credentials should be saved in the file:
+
+access_id=AKIA5HSDFSDFG3423BSR
+secret_key=93RrUgeMo/jsdfsW34LSDFSF/RzVQ+6Ig
+
+
+After login info is retrieved, the main script then calls boto3 library and gets an object representation of AWS resources. It then looks for instances with matching key/value tags, by unpacking nested list and dictionaries that contain instance information in each region.
+ 
+It is important to reiterate that this script scans across multititle regions.  This is important, because AWS UI is region-based and performing what this script does in the UI will require orders of magnitude more clicking and manual steps. This script saves significant time and effort as a result. It achieves this by retrieving list of all active AWS regions from client objects.
+
+After finding instances that match the user provided tags in the region in focus, it saves instance_id of them in a list and performs appropriate action (start/stop) on those instances before moving on to the next step. 
+
+
+
+Dependencies
+
+3rd party and non-standard libraries needed:
+Boto3 from AWS link.
+Python OS library
+Python Argparse librarfy
+
+Other info needed to run:
+
+Access key/secret to AWS account that has EC2 instances launched.
+
+
