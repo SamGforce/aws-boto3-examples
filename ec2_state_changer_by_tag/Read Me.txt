@@ -37,8 +37,8 @@ The custom loginInfo class is used to retrieved credentials from a file that’s
 
 Example of how credentials should be saved in the file:
 
-access_id=AKIA5HSDFSDFG3423BSR
-secret_key=93RrUgeMo/jsdfsW34LSDFSF/RzVQ+6Ig
+access_id=AKIAasdfsadfsadfas
+secret_key=93RrUssadfasdfasdfsdfsd
 
 
 After login info is retrieved, the main script then calls boto3 library and gets an object representation of AWS resources. It then looks for instances with matching key/value tags, by unpacking nested list and dictionaries that contain instance information in each region.
