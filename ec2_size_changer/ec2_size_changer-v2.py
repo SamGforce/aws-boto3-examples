@@ -1,17 +1,55 @@
 import boto3
 import argparse
-from cred_parser import loginInfo
+from os import path
+
+class loginInfo:
+    def __init__(self,file):
+        self.filename=file
+        assert  path.exists(self.filename), 'File does not exist'
+        infile = open(self.filename,'r')
+        self.lines=infile.readlines()
+        infile.close()
+        self._found_key=False
+        self.found_id=False
+      
+    def __repr__(self):
+        return "This class parses and returns credential that are store in a file"
+    def get_id(self):
+        
+        for line in self.lines:
+            if 'access_id' in line.strip():
+                access_id=line.split('=')[1].strip()
+                self.found_id=True
+                #for part in [x for x in chunks]:
+        if self.found_id == True:
+            return(access_id)
+        else:
+            print('Error! Unables to find access_id in the file')
+            return('Not Found')
+
+    def get_key(self):
+        
+        for line in self.lines:
+            if 'secret_key' in line:
+                secret_key=line.split('=')[1].strip()
+                self.found_key=True
+                #for part in [x for x in chunks]:   
+                #         
+        if self.found_key == True:
+            return(secret_key)
+        else:
+            print('Error! Unables to find access_id in the file')
+            return('Not Found')
 
 # 3 mandatory Arguments are passed to this script. Insance key, key value, and action start/stop
-# 4th arg is optionla, if not given will look for login.info inside same dir a the script
-#this version expect loginInfo class to be in the lib file
+# 4th arg is optional, if not given will look for login.info inside same dir a the script
 parser = argparse.ArgumentParser(prog='myprogram')
 parser.add_argument(
     '--tagKey', help='Specify the instance tag', type=str, required=True)
 parser.add_argument(
     '--tagVal', help='Specify the instance tag', type=str, required=True)
 parser.add_argument(
-    '--action', help='Specify action to be take. Acceptable options: Stop/Start', type=str, required=True)
+    '--size', help='Specify size to change. Acceptable options depend on avialable sizes', type=str, required=True)
 parser.add_argument('--credentialFile',
                     help='Specify the filne name containing credentials. Default is login.info', default='login.info', type=str)
 
@@ -81,6 +119,34 @@ def getInstanceIDbyTag(ec2, tagKey, tagVal):
         exit()
     return idList
 
+def shutdownInstance(ec2):
+    for region in regionList:
+        ec2 = getEC2resourceObj(region)
+        idList = getInstanceIDbyTag(ec2, args.tagKey, args.tagVal) # getting list of isntances that match the passed tags
+        print('Searching in', region)
+        if idList == []:
+            #print('None found')
+            pass
+    else:
+        print('Instances found in', region, ':')
+        for id in idList:
+            print(id)
+            turnOffInstance(ec2, id)
+        print('Stopping EC2instances ...')
+
+def checkInstanceState(ec2,ID):
+    return(ec2.instanceState)
+
+def changeInstanceSize(ec2,ID,size):
+    instanceOn=True
+    while instanceOn:
+        if checkInstanceState(ec2,id) == 'Off': #needs work
+            instanceOn=False
+            #change size
+            break
+
+
+
 
 # List of regions saved to a variable
 regionList = getRegionNameList()
@@ -93,15 +159,8 @@ for region in regionList:
     if idList == []:
         #print('None found')
         pass
-    elif args.action == 'Start':
-        print('Instances found in', region, ':')
+    else:
         for id in idList:
-            print(id)
-            turnOnInstance(ec2, id)
-        print('Starting them up...')
-    elif args.action == 'Stop':
-        print('Instances found in', region, ':')
-        for id in idList:
-            print(id)
-            turnOffInstance(ec2, id)
-        print('Stopping EC2instances ...')
+            print('changing size of',id)
+            print(ec2.meta.client.describe_instance_status()[id])
+            #changeInstanceSize(ec2, id,'m4.xlarge')
